@@ -8,6 +8,20 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - observability-network
+  dc-ubuntu:
+    build:
+      context: ./dc-ubuntu
+    container_name: dc-ubuntu
+    ports:
+      - "2222:22"
+      - "9100:9100"
+    networks:
+      - observability-network
+    volumes:
+      - dc-ubuntu-bin:/usr/local/bin
+
+volumes:
+  dc-ubuntu-bin:
 
 networks:
   observability-network:
