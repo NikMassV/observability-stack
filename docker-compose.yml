@@ -9,6 +9,7 @@ services:
       - ./prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml
     networks:
       - observability-network
+
   dc-ubuntu:
     build:
       context: ./dc-ubuntu
@@ -21,8 +22,24 @@ services:
     volumes:
       - dc-ubuntu-bin:/usr/local/bin
 
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=user
+      - GF_SECURITY_ADMIN_PASSWORD=password
+    depends_on:
+      - prometheus
+    networks:
+      - observability-network
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
 volumes:
   dc-ubuntu-bin:
+  grafana-storage:
 
 networks:
   observability-network:
