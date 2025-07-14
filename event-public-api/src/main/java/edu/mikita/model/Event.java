@@ -1,0 +1,4 @@
+package edu.mikita.model;
+
+public record Event(String uid, String subject, String description) {
+}
