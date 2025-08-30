@@ -336,6 +336,22 @@ services:
     networks:
       - observability-network
 
+  event-public-api:
+    image: event-public-api:latest
+    container_name: event-public-api
+    ports:
+      - "8092:8092"
+    build:
+      context: ./event-public-api
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EVENT_CONSUMER_URL: http://event-consumer:8091
+    depends_on:
+      event-consumer:
+        condition: service_healthy
+    networks:
+      - observability-net
+
 volumes:
   dc-ubuntu-bin:
   grafana-storage:
