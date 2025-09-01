@@ -245,6 +245,13 @@ services:
       context: ./event-producer
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      OTEL_SERVICE_NAME: event-producer
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://alloy:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_METRICS_EXPORTER: none
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_LOGS_EXPORTER: none
+      OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0,deployment.environment=docker
     depends_on:
       kafka1:
         condition: service_healthy
@@ -266,6 +273,13 @@ services:
       context: ./event-consumer
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      OTEL_SERVICE_NAME: event-consumer
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://alloy:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_METRICS_EXPORTER: none
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_LOGS_EXPORTER: none
+      OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0,deployment.environment=docker
     depends_on:
       postgres:
         condition: service_healthy
@@ -304,7 +318,9 @@ services:
     container_name: alloy
     user: root
     ports:
-      - "9080:9080"
+      - "9080:9080" # HTTP Alloy
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
     volumes:
       - ./monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
@@ -330,11 +346,30 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       EVENT_CONSUMER_URL: http://event-consumer:8091
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://alloy:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: event-public-api
+      OTEL_METRICS_EXPORTER: none
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_LOGS_EXPORTER: none
+      OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0,deployment.environment=docker
     depends_on:
       event-consumer:
         condition: service_healthy
     networks:
       - observability-network
+
+  tempo:
+    image: grafana/tempo:2.4.1
+    container_name: tempo
+    command: [ "-config.file=/etc/tempo/tempo.yaml" ]
+    volumes:
+      - ./monitoring/tempo/tempo.yaml:/etc/tempo/tempo.yaml
+      - tempo_data:/var/tempo
+    ports:
+      - "3200:3200"
+    networks:
+      - observability-net
 
 volumes:
   dc-ubuntu-bin:
@@ -348,6 +383,7 @@ volumes:
   loki_chunks:
   loki_index:
   loki_rules:
+  tempo_data:
 
 networks:
   observability-network:
