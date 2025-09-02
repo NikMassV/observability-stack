@@ -1,0 +1,40 @@
+openapi: 3.0.3
+info:
+  title: Event Consumer API
+  version: 1.0.0
+  description: |
+    Enternal API for getting events by UID.
+servers:
+  - url: http://localhost:8082
+paths:
+  /internal/api/v1/events/{uid}:
+    get:
+      summary: Get event by UID
+      parameters:
+        - in: path
+          name: uid
+          required: true
+          schema:
+            type: string
+          description: event UID
+      responses:
+        '200':
+          description: Event Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventEntity'
+        '404':
+          description: Event not found
+components:
+  schemas:
+    EventEntity:
+      type: object
+      properties:
+        uid:
+          type: string
+        subject:
+          type: string
+        description:
+          type: string
+      required: [uid, subject, description]
